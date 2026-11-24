@@ -15,7 +15,8 @@ function loadTasks() {
     const saved = JSON.parse(localStorage.getItem("todo-app"));
     if (Array.isArray(saved) && saved.every(task =>
       task && typeof task.name === "string" && task.name.trim() &&
-      typeof task.done === "boolean"
+      typeof task.done === "boolean" &&
+      (task.urgent === undefined || typeof task.urgent === "boolean")
     )) {
       return saved;
     }
@@ -42,11 +43,14 @@ function displayTasks() {
     button.setAttribute("aria-pressed", button.dataset.filter === filter);
   }
 
-  const visibleTasks = tasks.filter(task =>
-    filter === "all" || task.done === (filter === "done")
-  );
+  const visibleTasks = tasks.filter(task => {
+    if (filter === "all") return true;
+    if (filter === "urgent") return task.urgent === true;
+    return task.done === (filter === "done");
+  });
   const emptyMessages = {
     all: "No tasks yet. Try: ___, ___, ___.",
+    urgent: "No urgent tasks.",
     active: "No active tasks.",
     done: "No completed tasks."
   };
@@ -63,25 +67,43 @@ function displayTasks() {
       task.done = checkbox.checked;
       applyChange();
       const replacement = Array.from(list.children)[visibleTasks.indexOf(task)];
-      (replacement?.querySelector("input") || document.querySelector('[aria-pressed="true"]')).focus();
+      (replacement?.querySelector("input") || document.querySelector('[data-filter][aria-pressed="true"]')).focus();
     });
 
     const name = document.createElement("span");
     name.textContent = task.name;
     label.append(checkbox, name);
 
+    const urgent = document.createElement("button");
+    urgent.type = "button";
+    urgent.className = "task-urgent";
+    urgent.textContent = "❗️";
+    urgent.setAttribute("aria-label", "Urgent: " + task.name);
+    urgent.setAttribute("aria-pressed", String(task.urgent === true));
+    urgent.addEventListener("click", () => {
+      task.urgent = !task.urgent;
+      applyChange();
+      const replacement = list.children[visibleTasks.indexOf(task)];
+      if (filter === "urgent") {
+        document.querySelector('[data-filter="urgent"]').focus();
+      } else {
+        replacement.querySelector(".task-urgent").focus();
+      }
+    });
+
     const remove = document.createElement("button");
     remove.type = "button";
-    remove.textContent = "Delete";
+    remove.className = "task-delete";
+    remove.textContent = document.documentElement.dataset.deleteLabel || "Delete";
     remove.setAttribute("aria-label", "Delete " + task.name);
     remove.addEventListener("click", () => {
       tasks.splice(tasks.indexOf(task), 1);
       applyChange();
       const next = list.children[visibleTasks.indexOf(task)] || list.lastElementChild;
-      (next?.querySelector("button") || taskName).focus();
+      (next?.querySelector(".task-delete") || taskName).focus();
     });
 
-    row.append(label, remove);
+    row.append(label, urgent, remove);
     return row;
   }));
 }
@@ -100,8 +122,8 @@ form.addEventListener("submit", event => {
     taskName.reportValidity();
     return;
   }
-  tasks.push({ name, done: false });
-  if (filter === "done") filter = "active";
+  tasks.push({ name, done: false, urgent: false });
+  if (filter === "done" || filter === "urgent") filter = "active";
   taskName.value = "";
   applyChange();
   taskName.focus();

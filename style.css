@@ -83,19 +83,30 @@ button[aria-pressed="true"] {
 #tasks label {
   display: flex;
   flex: 1;
+  order: 1;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
   min-width: 0;
   min-height: 48px;
   overflow-wrap: anywhere;
+  text-align: right;
   cursor: pointer;
+}
+
+#tasks .task-delete {
+  order: -1;
+  flex: none;
+  min-width: 44px;
 }
 
 #tasks input {
   flex: none;
+  order: 1;
   min-height: 0;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 44px;
+  height: 44px;
+  padding: 0;
   margin: 0;
   accent-color: #215540;
 }
