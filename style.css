@@ -104,8 +104,8 @@ button[aria-pressed="true"] {
   flex: none;
   order: 1;
   min-height: 0;
-  width: 44px;
-  height: 44px;
+  width: 1.35rem;
+  height: 1.35rem;
   padding: 0;
   margin: 0;
   accent-color: #215540;
